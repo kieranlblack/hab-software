@@ -1,116 +1,193 @@
 #include <Arduino.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_MPRLS.h>
-#include <SoftwareSerial.h>
-#include <SD.h>
+#include <AltSoftSerial.h>
+#include <SDFat.h> // #include <SD.h>
 #include <SPI.h>
 #include <TinyGPS++.h>
 
-static const String TEMPFILE = "TEMP.LOG"; // Name for the temperature sensor log file
-static const int PINCS = 8; // Pin 10
+#define DEBUG false
+static const bool BUZZER = true;
 
-// Serial pins for the gps
-static const int PINRX = 4;
-static const int PINTX = 3;
+// Names for the log files
+static const char* SENSFILE = "SENS.LOG";
+static const char* GPSFILE = "GPS.LOG";
 
-// Pins for the LM60 temperature sensor
-static const int PINTEMP_IN = A1;
-static const int PINTEMP_EXT = A2;
+static const uint8_t PINCS = 8; // Pin for the SD Card
+static const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
+static const uint8_t PINTEMP_EXT = A2;
+static const uint8_t PINBUZZ = 3; // Pin for the buzzer
 
-static const float _hPa_PSI = 68.947572932;
+static SdFat sd;
+static SdFile activeFile;
+// static File activeFile;
 
-File myFile;
-Adafruit_BMP280 bmp = Adafruit_BMP280();
-Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
+static Adafruit_BMP280 bmp = Adafruit_BMP280();
+static Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
 
-SoftwareSerial ss(PINRX, PINTX);
+static AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
 
-TinyGPSPlus gps;
+static TinyGPSPlus gps;
 
-float pressure_MPRLS;
-float pressure_BPM;
-float temp;
-float latitude;
-float longitude;
-float alt;
+// All the variables for sensor data, why are they doubles you might ask... the compiler will yell if they are not
+static double pressure_MPRLS;
+static double pressure_BMP;
+static double temp_BMP;
+static double tempext;
+static double tempin;
+
+// All the variables for the GPS data
+static double latitude;
+static double longitude;
+static double alt;
+static double speed;
+static uint32_t gpsTime;
+static uint8_t satCount;
+
+// The buffers we want to write to the files
+static char* sensorOutBuff;
+static char* gpsOutBuff;
+
+static uint32_t time; // Holds the time since the program started
+
+static auto buzzTime = [&]() { return BUZZER && (pressure_BMP > 90000 || pressure_MPRLS > 900); };
+
+static double fixTemp(int sensorValue) {
+    // Will calculate the temperature based off the voltage and return it in C 
+    return ((((5.0 * sensorValue) / 1024) * 1000) - 424) / 6.25;
+}
+
+static void smartDelay(uint32_t ms) {
+    // This will continue to read the gps data and then continue to even when the arduino is delaying
+    uint32_t start = millis();
+
+    do {
+        while (ss.available() > 0) gps.encode(ss.read());
+    } while (millis() - start < ms);
+}
 
 void setup() {
     Serial.begin(9600); // Start serial for output
     ss.begin(9600); // Start the gps serial
 
-    pinMode(PINCS, OUTPUT); // Set pinCS as an output pin (SD card data output)
+    // pinMode(PINCS, OUTPUT); // Set pinCS as an output pin (SD card data output)
+    pinMode(PINBUZZ, OUTPUT); // Set up the buzzer pin as an output
 
+    if (!sd.begin(PINCS, SPI_HALF_SPEED)) sd.initErrorHalt();
+#if DEBUG
     // Check if the BMP sensor is connected
     if (bmp.begin()) {
-        Serial.println("BMP sensor found.");
+        Serial.println(F("BMP sensor found."));
     } else {
-        Serial.println("Failed to find the BMP sensor.");
+        Serial.println(F("Failed to find the BMP sensor."));
     }
 
     // Check if the MPRLS sensor is connected
     if (mpr.begin()) {
-        Serial.println("MPRLS sensor found.");
+        Serial.println(F("MPRLS sensor found."));
     } else {
-        Serial.println("Failed to find the MPRLS sensor.");
+        Serial.println(F("Failed to find the MPRLS sensor."));
     }
 
     // Check if the GPS is connected
     if (ss.available() > 0) {
-        Serial.println("GPS found.");
+        Serial.println(F("GPS found."));
     } else {
-        Serial.println("GPS not found.");
+        Serial.println(F("GPS not found."));
     }
 
     // SD card initialization
-    if (SD.begin()) {
-        Serial.println("SD card is ready to use.");
+    /* if (SD.begin()) {
+        Serial.println(F("SD card is ready to use."));
     } else {
-        Serial.println("SD card initialization failed.");
+        Serial.println(F("SD card initialization failed."));
+
+        return;
+    } */
+
+    if (sd.begin(PINCS, SPI_HALF_SPEED)) {
+        Serial.println(F("SD card is ready to use."));
+    } else {
+        Serial.println(F("SD card initialization failed."));
 
         return;
     }
+#else
+    // Initialise everything
+    bmp.begin();
+    mpr.begin();
+    // SD.begin();
+#endif
+    // activeFile = SD.open(SENSFILE, FILE_WRITE); // Open the file or create it if it does not exist
+    activeFile.open(SENSFILE, O_RDWR | O_CREAT | O_AT_END);
 
-    myFile = SD.open(TEMPFILE.c_str(), FILE_WRITE); // Open the file or create it if it does not exist
-
-    // Check if the file opened okay
-    if (myFile) {
+    // Check if the sensor file opened okay
+    if (true) { // activeFile
         // Yay it opened! now we write data to it
-        Serial.println("Writing to file...");
-        myFile.println("Data Logging....\nPressure and Temperature"); // Write to the file
-        myFile.close(); // Close the file
-        Serial.println("File closed.");
+        activeFile.println(F("T,PBMP,PMPRLS,TBMP,TIN,TEXT")); // Write to the file
+        activeFile.close(); // Close the file
     } else {
-        Serial.println("Error opening " + TEMPFILE);
+#if DEBUG
+        Serial.println("Error opening " + String(SENSFILE));
+#endif
+    }
+
+    // activeFile = SD.open(GPSFILE, FILE_WRITE);
+    activeFile.open(GPSFILE, O_RDWR | O_CREAT | O_AT_END);
+
+    if (true) { //activeFile
+        activeFile.println(F("T,GT,LAT,LNG,ALT,SPD,CNT"));
+        activeFile.close();
+    } else {
+#if DEBUG
+        Serial.println("Error opening " + String(POSFILE));
+#endif
     }
 }
 
+static void writeFile(const char* file, char* buff) {
+    // activeFile = SD.open(file, FILE_WRITE);
+    activeFile.open(file, O_RDWR | O_CREAT | O_AT_END);
+    activeFile.println(buff);
+    activeFile.close();
+}
+
 void loop() {
-    pressure_BPM = bmp.readPressure() / 100;
-    temp = bmp.readTemperature();
+    time = millis();
+    noTone(PINBUZZ);
+
+    if (buzzTime()) tone(PINBUZZ, 400, 1000);
+
+    // Get the sensor data
+    pressure_BMP = bmp.readPressure() / 100;
+    temp_BMP = bmp.readTemperature();
     pressure_MPRLS = mpr.readPressure();
+    tempext = fixTemp(analogRead(PINTEMP_EXT));
+    tempin = fixTemp(analogRead(PINTEMP_IN));
 
-    // Try and read from the GPS module
-    if (ss.available() > 0) {
-        gps.encode(ss.read());
-        
-        if (gps.location.isUpdated()) {
-            latitude = gps.location.lat();
-            longitude = gps.location.lng();
-            alt = gps.altitude.meters();
-        }
+    sprintf(sensorOutBuff, "%lu,%f,%f,%f,%f,%f", time, pressure_BMP, pressure_MPRLS, temp_BMP, tempin, tempext);
+
+    // Get the GPS data
+    if (gps.location.isValid()) {
+        latitude = gps.location.lat();
+        longitude = gps.location.lng();
     }
+    if (gps.altitude.isValid()) alt = gps.altitude.meters();
+    if (gps.speed.isValid()) speed = gps.speed.mps();
+    if (gps.satellites.isValid()) gps.satellites.value();
+    if (gps.time.isValid()) gpsTime = gps.time.value();
+    
+    sprintf(gpsOutBuff, "%lu,%lu,%f,%f,%f,%f,%d", time, gpsTime, latitude, longitude, alt, speed, satCount);
 
-    String gpsOutput = "Lat: " + String(latitude) + " Long: " + String(longitude) + " | Altitude: " + String(alt);
-    String sensorOutput = "Pressure_BMP: " +  String(pressure_BPM) + " / Pressure_MPRLS: " + String(pressure_MPRLS) + " | Temp: " + String(temp);
-    Serial.println(sensorOutput);
-    Serial.println(gpsOutput);
+    if (buzzTime()) tone(PINBUZZ, 1500, 1000);
+#if DEBUG
+    Serial.println(sensorOutBuff);
+    Serial.println(gpsOutBuff);
     Serial.println();
+#endif
+    // We write the data to the SD card
+    writeFile(SENSFILE, sensorOutBuff);
+    writeFile(GPSFILE, gpsOutBuff);
 
-    myFile = SD.open(TEMPFILE.c_str(), FILE_WRITE); // We write the data to the SD card
-    myFile.println(sensorOutput);
-    myFile.println(gpsOutput);
-    myFile.println();
-
-    myFile.close();
-    delay(1000);
+    smartDelay(1000);
 }

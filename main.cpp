@@ -10,7 +10,7 @@
 static const bool BUZZER = true;
 
 // Names for the log file
-static const char LOGFILE[10] = "16L.LOG";
+static const char LOGFILE[10] = "OUT.LOG";
 
 static const char* DELIMITER = ",";
 
@@ -43,6 +43,7 @@ static float alt;
 static float speed;
 static uint32_t gpsTime;
 static uint8_t satCount;
+static uint32_t age;
 
 static uint32_t time; // Holds the time since the program started
 
@@ -101,7 +102,7 @@ void setup() {
 #endif
     // Try and open the fild to write to it
     if (activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END)) {
-        activeFile.println(F("T,GT,PBMP,PMPRLS,TBMP,TIN,TEXT,LAT,LNG,ALT,SPD,CNT")); // Write to the file
+        activeFile.println(F("T,GT,PBMP,PMPRLS,TBMP,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,AGE")); // Write to the file
         activeFile.close(); // Close the file
     } else {
 #if DEBUG
@@ -132,8 +133,9 @@ void loop() {
     if (gps.speed.isValid()) speed = gps.speed.mps();
     if (gps.satellites.isValid()) gps.satellites.value();
     if (gps.time.isValid()) gpsTime = gps.time.value();
+    age = gps.time.age();
 
-    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d", time,
+    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%lu", time,
                                                                         gpsTime,
                                                                         (double) pressure_BMP,
                                                                         (double) pressure_MPRLS,
@@ -144,9 +146,8 @@ void loop() {
                                                                         longitude,
                                                                         (double) alt,
                                                                         (double) speed,
-                                                                        satCount); */
-
-    
+                                                                        satCount,
+                                                                        age); */
 
     if (buzzTime()) tone(PINBUZZ, 1500, 1000);
 #if DEBUG
@@ -181,6 +182,8 @@ void loop() {
     activeFile.print(speed);
     activeFile.print(DELIMITER);
     activeFile.print(satCount);
+    activeFile.print(DELIMITER);
+    activeFile.print(age);
     activeFile.println();
 
     activeFile.close();

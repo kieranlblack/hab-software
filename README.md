@@ -12,4 +12,4 @@
 | 8        | GPS TX           |
 
 ## I2C Stuff
-Link all the SCL and SDA pins
+Just link all the SCL and SDA pins

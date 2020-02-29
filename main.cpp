@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Adafruit_BMP280.h>
+// #include <Adafruit_BMP280.h>
 #include <Adafruit_MPRLS.h>
 #include <AltSoftSerial.h>
 #include <SDFat.h>
@@ -28,7 +28,7 @@ static const uint32_t VMETER_R2 = 3300;
 static SdFat sd;
 static SdFile activeFile;
 
-static Adafruit_BMP280 bmp = Adafruit_BMP280();
+// static Adafruit_BMP280 bmp = Adafruit_BMP280();
 static Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
 
 static AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
@@ -37,8 +37,8 @@ static TinyGPSPlus gps;
 
 // All the variables for sensor data
 static float pressure_MPRLS;
-static float pressure_BMP;
-static float temp_BMP;
+// static float pressure_BMP;
+// static float temp_BMP;
 static float tempext;
 static float tempin;
 static int16_t vin;
@@ -57,7 +57,7 @@ static uint32_t time; // Time since the program started
 // The file buffer
 // static char* outBuff;
 
-static bool buzzTime() { return BUZZER && (pressure_BMP > 90000 || pressure_MPRLS > 900); };
+static bool buzzTime() { return BUZZER && pressure_MPRLS > 900; };
 
 static double getTemp(uint8_t refPin, uint8_t tempPin) {
     // Will calculate the temperature based off the voltage and return it in C
@@ -90,12 +90,12 @@ void setup() {
     pinMode(PINRTEMP_EXT, OUTPUT); // Set up temperature enable pins
     pinMode(PINRTEMP_IN, OUTPUT);
 #if DEBUG
-    // Check if the BMP sensor is connected
-    if (bmp.begin()) {
-        Serial.println(F("BMP sensor found."));
-    } else {
-        Serial.println(F("Failed to find the BMP sensor."));
-    }
+    // // Check if the BMP sensor is connected
+    // if (bmp.begin()) {
+    //     Serial.println(F("BMP sensor found."));
+    // } else {
+    //     Serial.println(F("Failed to find the BMP sensor."));
+    // }
 
     // Check if the MPRLS sensor is connected
     if (mpr.begin()) {
@@ -113,14 +113,14 @@ void setup() {
     }
 #else
     // Initialise everything
-    bmp.begin();
+    // bmp.begin();
     mpr.begin();
     if (!sd.begin(PINCS, SPI_HALF_SPEED)) sd.initErrorHalt();
 #endif
     // Try and open the fild to write to it
     if (activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END)) {
-        // time since start, gps time, bmp pressure, mprls pressure, bmp temperature, internal temp, external temp, latitude, longitude, altitude, speed, satellite count, age of data
-        activeFile.println(F("T,GT,PBMP,PMPRLS,TBMP,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
+        // time since start, gps time, mprls pressure, internal temp, external temp, latitude, longitude, altitude, speed, satellite count, age of data
+        activeFile.println(F("T,GT,PMPRLS,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
         activeFile.close(); // Close the file
     } else {
 #if DEBUG
@@ -138,8 +138,8 @@ void loop() {
     if (buzzTime()) tone(PINBUZZ, 400, 1000);
 
     // Get the sensor data
-    pressure_BMP = bmp.readPressure() / 100;
-    temp_BMP = bmp.readTemperature();
+    // pressure_BMP = bmp.readPressure() / 100; // This function is absolutely massive for some reason
+    // temp_BMP = bmp.readTemperature();
     pressure_MPRLS = mpr.readPressure();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
     tempin = getTemp(PINRTEMP_IN, PINTEMP_IN);
@@ -159,11 +159,10 @@ void loop() {
     if (gps.time.isValid()) gpsTime = gps.time.value();
     age = gps.time.age();
 
-    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%u,%lu", time,
+    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%u,%lu",
+                                                                        time,
                                                                         gpsTime,
-                                                                        (double) pressure_BMP,
                                                                         (double) pressure_MPRLS,
-                                                                        (double) temp_BMP,
                                                                         (double) tempin,
                                                                         (double) tempext,
                                                                         latitude,
@@ -182,18 +181,18 @@ void loop() {
     // We write the data to the SD card
     activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END);
 
-    // Log all the data to the file, yeah it is ugly but it saves memory
+    // Log all the data to the file, yeah it is ugly but it saves memory, if memory is REALLY tight consider casting all of these to doubles first to avoid overloading the function
     // activeFile.println(outBuff);
     activeFile.print(time);
     activeFile.print(DELIMITER);
     activeFile.print(gpsTime);
     activeFile.print(DELIMITER);
-    activeFile.print(pressure_BMP);
-    activeFile.print(DELIMITER);
+    // activeFile.print(pressure_BMP);
+    // activeFile.print(DELIMITER);
     activeFile.print(pressure_MPRLS);
     activeFile.print(DELIMITER);
-    activeFile.print(temp_BMP);
-    activeFile.print(DELIMITER);
+    // activeFile.print(temp_BMP);
+    // activeFile.print(DELIMITER);
     activeFile.print(tempin);
     activeFile.print(DELIMITER);
     activeFile.print(tempext);
@@ -215,5 +214,5 @@ void loop() {
 
     activeFile.close();
 
-    smartDelay(990);
+    smartDelay(970);
 }

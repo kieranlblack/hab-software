@@ -50,10 +50,10 @@ static uint32_t time; // Holds the time since the program started
 // The file buffer
 // static char* outBuff;
 
-static auto buzzTime = [&]() { return BUZZER && (pressure_BMP > 90000 || pressure_MPRLS > 900); };
+static bool buzzTime() { return BUZZER && (pressure_BMP > 90000 || pressure_MPRLS > 900); };
 
 static double fixTemp(int sensorValue) {
-    // Will calculate the temperature based off the voltage and return it in C 
+    // Will calculate the temperature based off the voltage and return it in C
     return ((((5.0 * sensorValue) / 1024) * 1000) - 424) / 6.25;
 }
 

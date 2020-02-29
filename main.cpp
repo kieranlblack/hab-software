@@ -10,14 +10,20 @@
 static const bool BUZZER = true;
 
 // Names for the log file
-static const char LOGFILE[10] = "OUT.LOG";
+static const char LOGFILE[8] = "OUT.LOG";
 
 static const char* DELIMITER = ",";
 
-static const uint8_t PINCS = 8; // Pin for the SD Card
+static const uint8_t PINCS = 6; // Pin for the SD Card
+static const uint8_t PINRTEMP_IN = 5; // Reference pins for the temperature sensors
+static const uint8_t PINRTEMP_EXT = 4;
 static const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
 static const uint8_t PINTEMP_EXT = A2;
 static const uint8_t PINBUZZ = 3; // Pin for the buzzer
+static const uint8_t PINVMETER = A3; // Pin for the voltmeter
+
+static const uint32_t VMETER_R1 = 10000; // Resistance of the first resistor
+static const uint32_t VMETER_R2 = 3300;
 
 static SdFat sd;
 static SdFile activeFile;
@@ -35,6 +41,7 @@ static float pressure_BMP;
 static float temp_BMP;
 static float tempext;
 static float tempin;
+static int16_t vin;
 
 // All the variables for the GPS data
 static double latitude;
@@ -45,16 +52,23 @@ static uint32_t gpsTime;
 static uint8_t satCount;
 static uint32_t age;
 
-static uint32_t time; // Holds the time since the program started
+static uint32_t time; // Time since the program started
 
 // The file buffer
 // static char* outBuff;
 
 static bool buzzTime() { return BUZZER && (pressure_BMP > 90000 || pressure_MPRLS > 900); };
 
-static double fixTemp(int sensorValue) {
+static double getTemp(uint8_t refPin, uint8_t tempPin) {
     // Will calculate the temperature based off the voltage and return it in C
-    return ((((5.0 * sensorValue) / 1024) * 1000) - 424) / 6.25;
+    digitalWrite(refPin, HIGH); // Turn on the LM60
+    analogReference(INTERNAL); // Set the reference
+    analogRead(tempPin); // Trash the bad reading
+    delay(10); // Wait for the switch
+    vin = analogRead(tempPin); // Get the real reading
+    digitalWrite(refPin, LOW); // Turn off the LM60
+
+    return (4L + (1100L * vin / 1024L) - 424) / 25;
 }
 
 static void smartDelay(uint32_t ms) {
@@ -72,6 +86,9 @@ void setup() {
 
     // pinMode(PINCS, OUTPUT); // Set pinCS as an output pin (SD card data output)
     pinMode(PINBUZZ, OUTPUT); // Set up the buzzer pin as an output
+
+    pinMode(PINRTEMP_EXT, OUTPUT); // Set up temperature enable pins
+    pinMode(PINRTEMP_IN, OUTPUT);
 #if DEBUG
     // Check if the BMP sensor is connected
     if (bmp.begin()) {
@@ -102,13 +119,16 @@ void setup() {
 #endif
     // Try and open the fild to write to it
     if (activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END)) {
-        activeFile.println(F("T,GT,PBMP,PMPRLS,TBMP,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,AGE")); // Write to the file
+        // time since start, gps time, bmp pressure, mprls pressure, bmp temperature, internal temp, external temp, latitude, longitude, altitude, speed, satellite count, age of data
+        activeFile.println(F("T,GT,PBMP,PMPRLS,TBMP,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
         activeFile.close(); // Close the file
     } else {
 #if DEBUG
         Serial.println("Error opening " + String(LOGFILE));
 #endif
     }
+
+    smartDelay(500); // Give the GPS time to get some sort of lock before jumping into the loop
 }
 
 void loop() {
@@ -121,8 +141,12 @@ void loop() {
     pressure_BMP = bmp.readPressure() / 100;
     temp_BMP = bmp.readTemperature();
     pressure_MPRLS = mpr.readPressure();
-    tempext = fixTemp(analogRead(PINTEMP_EXT));
-    tempin = fixTemp(analogRead(PINTEMP_IN));
+    tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
+    tempin = getTemp(PINRTEMP_IN, PINTEMP_IN);
+    analogReference(DEFAULT); // Make sure we will be reading with a good reference voltage
+    analogRead(PINVMETER); // Trash the first reading
+    delay(10); // Give the arduino time to make the switch
+    vin = 5000L * analogRead(PINVMETER) / 1024L * (VMETER_R1 + VMETER_R2) / VMETER_R2;
 
     // Get the GPS data
     if (gps.location.isValid()) {
@@ -135,7 +159,7 @@ void loop() {
     if (gps.time.isValid()) gpsTime = gps.time.value();
     age = gps.time.age();
 
-    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%lu", time,
+    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%u,%lu", time,
                                                                         gpsTime,
                                                                         (double) pressure_BMP,
                                                                         (double) pressure_MPRLS,
@@ -147,6 +171,7 @@ void loop() {
                                                                         (double) alt,
                                                                         (double) speed,
                                                                         satCount,
+                                                                        vin,
                                                                         age); */
 
     if (buzzTime()) tone(PINBUZZ, 1500, 1000);
@@ -183,10 +208,12 @@ void loop() {
     activeFile.print(DELIMITER);
     activeFile.print(satCount);
     activeFile.print(DELIMITER);
+    activeFile.print(vin);
+    activeFile.print(DELIMITER);
     activeFile.print(age);
     activeFile.println();
 
     activeFile.close();
 
-    smartDelay(1000);
+    smartDelay(990);
 }

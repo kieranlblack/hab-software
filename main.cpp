@@ -16,8 +16,8 @@ static const char LOGFILE[8] = "OUT.LOG";
 static const char* DELIMITER = ",";
 
 static const uint8_t PINCS = 6; // Pin for the SD Card
-static const uint8_t PINRTEMP_IN = 5; // Reference pins for the temperature sensors
-static const uint8_t PINRTEMP_EXT = 4;
+static const uint8_t PINRTEMP_IN = 4; // Reference pins for the temperature sensors
+static const uint8_t PINRTEMP_EXT = 5;
 static const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
 static const uint8_t PINTEMP_EXT = A2;
 static const uint8_t PINBUZZ = 3; // Pin for the buzzer

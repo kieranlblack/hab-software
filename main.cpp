@@ -2,6 +2,7 @@
 // #include <Adafruit_BMP280.h>
 #include <Adafruit_MPRLS.h>
 #include <AltSoftSerial.h>
+#include <DHT.h>
 #include <SDFat.h>
 #include <SPI.h>
 #include <TinyGPS++.h>
@@ -21,6 +22,7 @@ static const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
 static const uint8_t PINTEMP_EXT = A2;
 static const uint8_t PINBUZZ = 3; // Pin for the buzzer
 static const uint8_t PINVMETER = A3; // Pin for the voltmeter
+static const uint8_t PINDHT = 2;
 
 static const uint32_t VMETER_R1 = 10000; // Resistance of the first resistor
 static const uint32_t VMETER_R2 = 3300;
@@ -30,6 +32,7 @@ static SdFile activeFile;
 
 // static Adafruit_BMP280 bmp = Adafruit_BMP280();
 static Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
+static DHT dht;
 
 static AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
 
@@ -41,7 +44,9 @@ static float pressure_MPRLS;
 // static float temp_BMP;
 static float tempext;
 static float tempin;
-static int16_t vin;
+static float humidity;
+static float dht_temp;
+static uint16_t vin;
 
 // All the variables for the GPS data
 static double latitude;
@@ -53,9 +58,6 @@ static uint8_t satCount;
 static uint32_t age;
 
 static uint32_t time; // Time since the program started
-
-// The file buffer
-// static char* outBuff;
 
 static bool buzzTime() { return BUZZER && pressure_MPRLS > 900; };
 
@@ -115,20 +117,23 @@ void setup() {
     // Initialise everything
     // bmp.begin();
     mpr.begin();
+    dht.setup(PINDHT);
+
     if (!sd.begin(PINCS, SPI_HALF_SPEED)) sd.initErrorHalt();
 #endif
-    // Try and open the fild to write to it
+    // Try and open the file to write to it
     if (activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END)) {
         // time since start, gps time, mprls pressure, internal temp, external temp, latitude, longitude, altitude, speed, satellite count, age of data
-        activeFile.println(F("T,GT,PMPRLS,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
+        activeFile.println(F("T,GT,PRES,HUM,TDHT,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
         activeFile.close(); // Close the file
     } else {
 #if DEBUG
-        Serial.println("Error opening " + String(LOGFILE));
+        Serial.print(F("Error opening "));
+        Serial.println(LOGFILE);
 #endif
     }
 
-    smartDelay(500); // Give the GPS time to get some sort of lock before jumping into the loop
+    smartDelay(500); // Give the GPS time to get some sort of lock before jumping into the loop if it had one before
 }
 
 void loop() {
@@ -141,6 +146,8 @@ void loop() {
     // pressure_BMP = bmp.readPressure() / 100; // This function is absolutely massive for some reason
     // temp_BMP = bmp.readTemperature();
     pressure_MPRLS = mpr.readPressure();
+    humidity = dht.getHumidity();
+    dht_temp = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
     tempin = getTemp(PINRTEMP_IN, PINTEMP_IN);
     analogReference(DEFAULT); // Make sure we will be reading with a good reference voltage
@@ -159,25 +166,8 @@ void loop() {
     if (gps.time.isValid()) gpsTime = gps.time.value();
     age = gps.time.age();
 
-    /* sprintf(outBuff, "%lu,%lu,%.2f,%.2f,%.2f,%f,%f,%.2f,%.2f,%d,%u,%lu",
-                                                                        time,
-                                                                        gpsTime,
-                                                                        (double) pressure_MPRLS,
-                                                                        (double) tempin,
-                                                                        (double) tempext,
-                                                                        latitude,
-                                                                        longitude,
-                                                                        (double) alt,
-                                                                        (double) speed,
-                                                                        satCount,
-                                                                        vin,
-                                                                        age); */
-
     if (buzzTime()) tone(PINBUZZ, 1500, 1000);
-#if DEBUG
-    Serial.println(outBuff);
-    Serial.println();
-#endif
+
     // We write the data to the SD card
     activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END);
 
@@ -191,15 +181,19 @@ void loop() {
     // activeFile.print(DELIMITER);
     activeFile.print(pressure_MPRLS);
     activeFile.print(DELIMITER);
+    activeFile.print(humidity);
+    activeFile.print(DELIMITER);
+    activeFile.print(dht_temp);
+    activeFile.print(DELIMITER);
     // activeFile.print(temp_BMP);
     // activeFile.print(DELIMITER);
     activeFile.print(tempin);
     activeFile.print(DELIMITER);
     activeFile.print(tempext);
     activeFile.print(DELIMITER);
-    activeFile.print(latitude);
+    activeFile.print(latitude, 7);
     activeFile.print(DELIMITER);
-    activeFile.print(longitude);
+    activeFile.print(longitude, 7);
     activeFile.print(DELIMITER);
     activeFile.print(alt);
     activeFile.print(DELIMITER);
@@ -214,5 +208,36 @@ void loop() {
 
     activeFile.close();
 
-    smartDelay(970);
+#if DEBUG
+    Serial.print(time);
+    Serial.print(DELIMITER);
+    Serial.print(gpsTime);
+    Serial.print(DELIMITER);
+    Serial.print(pressure_MPRLS);
+    Serial.print(DELIMITER);
+    Serial.print(humidity);
+    Serial.print(DELIMITER);
+    Serial.print(dht_temp);
+    Serial.print(DELIMITER);
+    Serial.print(tempin);
+    Serial.print(DELIMITER);
+    Serial.print(tempext);
+    Serial.print(DELIMITER);
+    Serial.print(latitude, 7);
+    Serial.print(DELIMITER);
+    Serial.print(longitude, 7);
+    Serial.print(DELIMITER);
+    Serial.print(alt);
+    Serial.print(DELIMITER);
+    Serial.print(speed);
+    Serial.print(DELIMITER);
+    Serial.print(satCount);
+    Serial.print(DELIMITER);
+    Serial.print(vin);
+    Serial.print(DELIMITER);
+    Serial.print(age);
+    Serial.println();
+#endif
+
+    smartDelay(1000); // Something to note is that although the DHT22 is a lot more accurate we can only read from it once every 2 seconds
 }

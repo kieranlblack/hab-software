@@ -51,6 +51,7 @@ static uint16_t vin;
 // All the variables for the GPS data
 static double latitude;
 static double longitude;
+static double course;
 static float alt;
 static float speed;
 static uint32_t gpsTime;
@@ -123,8 +124,8 @@ void setup() {
 #endif
     // Try and open the file to write to it
     if (activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END)) {
-        // time since start, gps time, mprls pressure, internal temp, external temp, latitude, longitude, altitude, speed, satellite count, age of data
-        activeFile.println(F("T,GT,PRES,HUM,TDHT,TIN,TEXT,LAT,LNG,ALT,SPD,CNT,V,AGE")); // Write to the file
+        // time since start, gps time, mprls pressure, humidity, dht temp, internal temp, external temp, latitude, longitude, altitude, speed, course, satellite count, voltage, age of data
+        activeFile.println(F("T,GT,PRES,HUM,TDHT,TIN,TEXT,LAT,LNG,ALT,SPD,CRS,CNT,V,AGE")); // Write to the file
         activeFile.close(); // Close the file
     } else {
 #if DEBUG
@@ -150,6 +151,7 @@ void loop() {
     dht_temp = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
     tempin = getTemp(PINRTEMP_IN, PINTEMP_IN);
+
     analogReference(DEFAULT); // Make sure we will be reading with a good reference voltage
     analogRead(PINVMETER); // Trash the first reading
     delay(10); // Give the arduino time to make the switch
@@ -162,7 +164,8 @@ void loop() {
     }
     if (gps.altitude.isValid()) alt = gps.altitude.meters();
     if (gps.speed.isValid()) speed = gps.speed.mps();
-    if (gps.satellites.isValid()) gps.satellites.value();
+    if (gps.satellites.isValid()) satCount = gps.satellites.value();
+    if (gps.course.isValid()) course = gps.course.deg();
     if (gps.time.isValid()) gpsTime = gps.time.value();
     age = gps.time.age();
 
@@ -199,6 +202,8 @@ void loop() {
     activeFile.print(DELIMITER);
     activeFile.print(speed);
     activeFile.print(DELIMITER);
+    activeFile.print(course);
+    activeFile.print(DELIMITER);
     activeFile.print(satCount);
     activeFile.print(DELIMITER);
     activeFile.print(vin);
@@ -230,6 +235,8 @@ void loop() {
     Serial.print(alt);
     Serial.print(DELIMITER);
     Serial.print(speed);
+    Serial.print(DELIMITER);
+    Serial.print(course);
     Serial.print(DELIMITER);
     Serial.print(satCount);
     Serial.print(DELIMITER);

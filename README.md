@@ -20,6 +20,25 @@
 ## I2C Stuff
 Just link all the SCL and SDA pins
 
+# Symbol Meanings
+| Short | Long                  | Units   | Notes                   |
+|:-----:|:--------------------:|:--------:|:----------------------- |
+| T     | Time Elapsed         | ms       | millis()                |
+| GT    | Current Time         | HHMMSSCC | CC is centiseconds      |
+| PRES  | Pressure             | hPa      |                         |
+| HUM   | Humidity             | %        | Relative Humidity       |
+| TDHT  | DHT Temperature      | C        |                         |
+| TIN   | Internal Temperature | C        |                         |
+| TEXT  | External Temperature | C        |                         |
+| LAT   | Latitude             | degrees  | Can be converted to DMS |
+| LNG   | Longitude            | degrees  |                         |
+| ALT   | Altitude             | m        |                         |
+| SPD   | Speed                | m/s      |                         |
+| CRS   | Course               | degrees  |                         |
+| CNT   | Satellite Count      | number   |                         |
+| V     | Voltage              | mV       |                         |
+| AGE   | Age of GPS Data      | ms       |                         |
+
 # Extra Info
 ## LM60
 If the LM60 is connected backwards it will get really hot. \

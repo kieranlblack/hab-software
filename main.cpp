@@ -1,5 +1,4 @@
 #include <Arduino.h>
-// #include <Adafruit_BMP280.h>
 #include <Adafruit_MPRLS.h>
 #include <AltSoftSerial.h>
 #include <DHT.h>
@@ -10,8 +9,8 @@
 #define DEBUG false
 static const bool BUZZER = true;
 
-// Names for the log file
-static const char LOGFILE[8] = "OUT.LOG";
+// Name for the log file
+static const char LOGFILE[9] = "AOUT.LOG";
 
 static const char* DELIMITER = ",";
 
@@ -30,7 +29,6 @@ static const uint32_t VMETER_R2 = 3300;
 static SdFat sd;
 static SdFile activeFile;
 
-// static Adafruit_BMP280 bmp = Adafruit_BMP280();
 static Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
 static DHT dht;
 
@@ -40,8 +38,6 @@ static TinyGPSPlus gps;
 
 // All the variables for sensor data
 static float pressure_MPRLS;
-// static float pressure_BMP;
-// static float temp_BMP;
 static float tempext;
 static float tempin;
 static float humidity;
@@ -60,7 +56,7 @@ static uint32_t age;
 
 static uint32_t time; // Time since the program started
 
-static bool buzzTime() { return BUZZER && pressure_MPRLS > 900; };
+static bool buzzTime() { return BUZZER && (pressure_MPRLS > 900 || alt < 3000); }
 
 static double getTemp(uint8_t refPin, uint8_t tempPin) {
     // Will calculate the temperature based off the voltage and return it in C
@@ -84,21 +80,13 @@ static void smartDelay(uint32_t ms) {
 }
 
 void setup() {
-    Serial.begin(9600); // Start serial for output
     ss.begin(9600); // Start the gps serial
 
-    // pinMode(PINCS, OUTPUT); // Set pinCS as an output pin (SD card data output)
     pinMode(PINBUZZ, OUTPUT); // Set up the buzzer pin as an output
-
     pinMode(PINRTEMP_EXT, OUTPUT); // Set up temperature enable pins
     pinMode(PINRTEMP_IN, OUTPUT);
 #if DEBUG
-    // // Check if the BMP sensor is connected
-    // if (bmp.begin()) {
-    //     Serial.println(F("BMP sensor found."));
-    // } else {
-    //     Serial.println(F("Failed to find the BMP sensor."));
-    // }
+    Serial.begin(9600); // Start serial for output
 
     // Check if the MPRLS sensor is connected
     if (mpr.begin()) {
@@ -107,16 +95,19 @@ void setup() {
         Serial.println(F("Failed to find the MPRLS sensor."));
     }
 
+    dht.setup(PINDHT);
+
     if (sd.begin(PINCS, SPI_HALF_SPEED)) {
         Serial.println(F("SD card is ready to use."));
     } else {
         Serial.println(F("SD card initialization failed."));
 
-        return;
+        sd.initErrorHalt();
     }
+
+    Serial.println(F("T,GT,PRES,HUM,TDHT,TIN,TEXT,LAT,LNG,ALT,SPD,CRS,CNT,V,AGE"));
 #else
     // Initialise everything
-    // bmp.begin();
     mpr.begin();
     dht.setup(PINDHT);
 
@@ -144,9 +135,7 @@ void loop() {
     if (buzzTime()) tone(PINBUZZ, 400, 1000);
 
     // Get the sensor data
-    // pressure_BMP = bmp.readPressure() / 100; // This function is absolutely massive for some reason
-    // temp_BMP = bmp.readTemperature();
-    pressure_MPRLS = mpr.readPressure();
+    pressure_MPRLS = mpr.readPressure(); // TODO: this line will hang the entire program if the mprls becomes unplugged
     humidity = dht.getHumidity();
     dht_temp = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
@@ -175,21 +164,16 @@ void loop() {
     activeFile.open(LOGFILE, O_RDWR | O_CREAT | O_AT_END);
 
     // Log all the data to the file, yeah it is ugly but it saves memory, if memory is REALLY tight consider casting all of these to doubles first to avoid overloading the function
-    // activeFile.println(outBuff);
     activeFile.print(time);
     activeFile.print(DELIMITER);
     activeFile.print(gpsTime);
     activeFile.print(DELIMITER);
-    // activeFile.print(pressure_BMP);
-    // activeFile.print(DELIMITER);
     activeFile.print(pressure_MPRLS);
     activeFile.print(DELIMITER);
     activeFile.print(humidity);
     activeFile.print(DELIMITER);
     activeFile.print(dht_temp);
     activeFile.print(DELIMITER);
-    // activeFile.print(temp_BMP);
-    // activeFile.print(DELIMITER);
     activeFile.print(tempin);
     activeFile.print(DELIMITER);
     activeFile.print(tempext);

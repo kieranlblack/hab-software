@@ -13,9 +13,9 @@
 | 5        | External LM60 EN |
 | 6        | SD Card CS       |
 | 8        | GPS TX           |
-| 11       | SD Card DI       |
-| 12       | SD Card DO       |
-| 13       | SD Card CLK      |
+| 11       | SD Card MOSI     |
+| 12       | SD Card MISO     |
+| 13       | SD Card SCK      |
 
 ## I2C Stuff
 Just link all the SCL and SDA pins
@@ -24,7 +24,7 @@ Just link all the SCL and SDA pins
 | Short | Long                  | Units   | Notes                   |
 |:-----:|:--------------------:|:--------:|:----------------------- |
 | T     | Time Elapsed         | ms       | millis()                |
-| GT    | Current Time         | HHMMSSCC | CC is centiseconds      |
+| GT    | Current Time         | HHMMSSCC | UTC. CC is centiseconds |
 | PRES  | Pressure             | hPa      |                         |
 | HUM   | Humidity             | %        | Relative Humidity       |
 | TDHT  | DHT Temperature      | C        |                         |

@@ -7,13 +7,13 @@
 #include <TinyGPS++.h>
 
 #define DEBUG false
-static const bool BUZZER = true;
+static const bool BUZZER = false;
 
 // Name for the log file
 static const char LOGFILE[9] = "AOUT.LOG";
+static const char DELIMITER = ',';
 
-static const char* DELIMITER = ",";
-
+// Pins
 static const uint8_t PINCS = 6; // Pin for the SD Card
 static const uint8_t PINRTEMP_IN = 4; // Reference pins for the temperature sensors
 static const uint8_t PINRTEMP_EXT = 5;
@@ -135,7 +135,7 @@ void loop() {
     if (buzzTime()) tone(PINBUZZ, 400, 1000);
 
     // Get the sensor data
-    pressure_MPRLS = mpr.readPressure(); // TODO: this line will hang the entire program if the mprls becomes unplugged
+    pressure_MPRLS = mpr.readPressure(); //! this line will hang the entire program if the mprls becomes unplugged
     humidity = dht.getHumidity();
     dht_temp = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
@@ -144,7 +144,7 @@ void loop() {
     analogReference(DEFAULT); // Make sure we will be reading with a good reference voltage
     analogRead(PINVMETER); // Trash the first reading
     delay(10); // Give the arduino time to make the switch
-    vin = 5000L * analogRead(PINVMETER) / 1024L * (VMETER_R1 + VMETER_R2) / VMETER_R2;
+    vin = (uint32_t)(5000L * analogRead(PINVMETER) / 1024L) * (VMETER_R1 + VMETER_R2) / VMETER_R2;
 
     // Get the GPS data
     if (gps.location.isValid()) {

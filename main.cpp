@@ -26,6 +26,8 @@ static const uint8_t PINDHT = 2;
 static const uint32_t VMETER_R1 = 10000; // Resistance of the first resistor
 static const uint32_t VMETER_R2 = 3300;
 
+static const float tempCalibration = 0.0;
+
 static SdFat sd;
 static SdFile activeFile;
 
@@ -37,11 +39,11 @@ static AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
 static TinyGPSPlus gps;
 
 // All the variables for sensor data
-static float pressure_MPRLS;
+static float pressureMPRLS;
 static float tempext;
 static float tempin;
 static float humidity;
-static float dht_temp;
+static float tempDHT;
 static uint16_t vin;
 
 // All the variables for the GPS data
@@ -56,9 +58,9 @@ static uint32_t age;
 
 static uint32_t time; // Time since the program started
 
-static bool buzzTime() { return BUZZER && (pressure_MPRLS > 900 || alt < 3000); }
+static bool buzzTime(void) { return BUZZER && (pressureMPRLS > 900 || alt < 3000); }
 
-static double getTemp(uint8_t refPin, uint8_t tempPin) {
+static float getTemp(uint8_t refPin, uint8_t tempPin) {
     // Will calculate the temperature based off the voltage and return it in C
     digitalWrite(refPin, HIGH); // Turn on the LM60
     analogReference(INTERNAL); // Set the reference
@@ -67,7 +69,7 @@ static double getTemp(uint8_t refPin, uint8_t tempPin) {
     vin = analogRead(tempPin); // Get the real reading
     digitalWrite(refPin, LOW); // Turn off the LM60
 
-    return (4L + (1100L * vin / 1024L) - 424) / 25;
+    return ((4L + (1100L * vin / 1024L) - 424) / 25) + tempCalibration;
 }
 
 static void smartDelay(uint32_t ms) {
@@ -75,6 +77,7 @@ static void smartDelay(uint32_t ms) {
     uint32_t start = millis();
 
     do {
+        //? might be possible for the arduino to get stuck reading from the gps if we up refresh rate on the u-blox although highly unlikely
         while (ss.available() > 0) gps.encode(ss.read());
     } while (millis() - start < ms);
 }
@@ -135,9 +138,10 @@ void loop() {
     if (buzzTime()) tone(PINBUZZ, 400, 1000);
 
     // Get the sensor data
-    pressure_MPRLS = mpr.readPressure(); //! this line will hang the entire program if the mprls becomes unplugged
+    //TODO try and put 10k pullup resistors on the SCL and SDA lines to see if it fixes the hangs (I doubt it will)
+    pressureMPRLS = mpr.readPressure(); //! this line will hang the entire program if the mprls becomes unplugged
     humidity = dht.getHumidity();
-    dht_temp = dht.getTemperature();
+    tempDHT = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
     tempin = getTemp(PINRTEMP_IN, PINTEMP_IN);
 
@@ -155,7 +159,7 @@ void loop() {
     if (gps.speed.isValid()) speed = gps.speed.mps();
     if (gps.satellites.isValid()) satCount = gps.satellites.value();
     if (gps.course.isValid()) course = gps.course.deg();
-    if (gps.time.isValid()) gpsTime = gps.time.value();
+    if (gps.time.isValid()) gpsTime = gps.time.value() / 100; // Remove those pesky centiseconds
     age = gps.time.age();
 
     if (buzzTime()) tone(PINBUZZ, 1500, 1000);
@@ -168,11 +172,11 @@ void loop() {
     activeFile.print(DELIMITER);
     activeFile.print(gpsTime);
     activeFile.print(DELIMITER);
-    activeFile.print(pressure_MPRLS);
+    activeFile.print(pressureMPRLS);
     activeFile.print(DELIMITER);
     activeFile.print(humidity);
     activeFile.print(DELIMITER);
-    activeFile.print(dht_temp);
+    activeFile.print(tempDHT);
     activeFile.print(DELIMITER);
     activeFile.print(tempin);
     activeFile.print(DELIMITER);
@@ -202,11 +206,11 @@ void loop() {
     Serial.print(DELIMITER);
     Serial.print(gpsTime);
     Serial.print(DELIMITER);
-    Serial.print(pressure_MPRLS);
+    Serial.print(pressureMPRLS);
     Serial.print(DELIMITER);
     Serial.print(humidity);
     Serial.print(DELIMITER);
-    Serial.print(dht_temp);
+    Serial.print(tempDHT);
     Serial.print(DELIMITER);
     Serial.print(tempin);
     Serial.print(DELIMITER);
@@ -230,5 +234,5 @@ void loop() {
     Serial.println();
 #endif
 
-    smartDelay(1000); // Something to note is that although the DHT22 is a lot more accurate we can only read from it once every 2 seconds
+    smartDelay(960); // Something to note is that although the DHT22 is a lot more accurate we can only read from it once every 2 seconds
 }

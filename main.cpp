@@ -6,11 +6,11 @@
 #include <SPI.h>
 #include <TinyGPS++.h>
 
-#define DEBUG false
+#define DEBUG true
 static const bool BUZZER = false;
 
 // Name for the log file
-static const char LOGFILE[9] = "AOUT.LOG";
+static const char LOGFILE[] = "AOUT.LOG";
 static const char DELIMITER = ',';
 
 // Pins
@@ -138,8 +138,11 @@ void loop() {
     if (buzzTime()) tone(PINBUZZ, 400, 1000);
 
     // Get the sensor data
-    //TODO try and put 10k pullup resistors on the SCL and SDA lines to see if it fixes the hangs (I doubt it will)
-    pressureMPRLS = mpr.readPressure(); //! this line will hang the entire program if the mprls becomes unplugged
+    /**
+    *! this line will hang the entire program if the mprls becomes unplugged
+    *! the catch lies in twi_readFrom / twi_writeTo which is a blocking call, if the slave never responds the master never continues
+    **/
+    pressureMPRLS = mpr.readPressure();
     humidity = dht.getHumidity();
     tempDHT = dht.getTemperature();
     tempext = getTemp(PINRTEMP_EXT, PINTEMP_EXT);
@@ -159,7 +162,7 @@ void loop() {
     if (gps.speed.isValid()) speed = gps.speed.mps();
     if (gps.satellites.isValid()) satCount = gps.satellites.value();
     if (gps.course.isValid()) course = gps.course.deg();
-    if (gps.time.isValid()) gpsTime = gps.time.value() / 100; // Remove those pesky centiseconds
+    if (gps.time.isValid()) gpsTime = gps.time.value() / 100; //TODO: check this removed the centiseconds
     age = gps.time.age();
 
     if (buzzTime()) tone(PINBUZZ, 1500, 1000);
@@ -200,7 +203,6 @@ void loop() {
     activeFile.println();
 
     activeFile.close();
-
 #if DEBUG
     Serial.print(time);
     Serial.print(DELIMITER);
@@ -233,6 +235,5 @@ void loop() {
     Serial.print(age);
     Serial.println();
 #endif
-
     smartDelay(960); // Something to note is that although the DHT22 is a lot more accurate we can only read from it once every 2 seconds
 }

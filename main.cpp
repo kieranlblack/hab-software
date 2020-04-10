@@ -7,60 +7,60 @@
 #include <TinyGPS++.h>
 
 #define DEBUG true
-static const bool BUZZER = false;
+const bool BUZZER = false;
 
 // Name for the log file
-static const char LOGFILE[] = "AOUT.LOG";
-static const char DELIMITER = ',';
+const char LOGFILE[] = "AOUT.LOG";
+const char DELIMITER = ',';
 
 // Pins
-static const uint8_t PINCS = 6; // Pin for the SD Card
-static const uint8_t PINRTEMP_IN = 4; // Reference pins for the temperature sensors
-static const uint8_t PINRTEMP_EXT = 5;
-static const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
-static const uint8_t PINTEMP_EXT = A2;
-static const uint8_t PINBUZZ = 3; // Pin for the buzzer
-static const uint8_t PINVMETER = A3; // Pin for the voltmeter
-static const uint8_t PINDHT = 2;
+const uint8_t PINCS = 6; // Pin for the SD Card
+const uint8_t PINRTEMP_IN = 4; // Reference pins for the temperature sensors
+const uint8_t PINRTEMP_EXT = 5;
+const uint8_t PINTEMP_IN = A1; // Pins for the LM60 temperature sensors
+const uint8_t PINTEMP_EXT = A2;
+const uint8_t PINBUZZ = 3; // Pin for the buzzer
+const uint8_t PINVMETER = A3; // Pin for the voltmeter
+const uint8_t PINDHT = 2;
 
-static const uint32_t VMETER_R1 = 10000; // Resistance of the first resistor
-static const uint32_t VMETER_R2 = 3300;
+const uint32_t VMETER_R1 = 10000; // Resistance of the first resistor
+const uint32_t VMETER_R2 = 3300;
 
-static const float tempCalibration = 0.0;
+const float tempCalibration = 0.0;
 
-static SdFat sd;
-static SdFile activeFile;
+SdFat sd;
+SdFile activeFile;
 
-static Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
-static DHT dht;
+Adafruit_MPRLS mpr = Adafruit_MPRLS(-1, -1);
+DHT dht;
 
-static AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
+AltSoftSerial ss; // Need to use pins 8 and 9 for RX and TX respectively
 
-static TinyGPSPlus gps;
+TinyGPSPlus gps;
 
 // All the variables for sensor data
-static float pressureMPRLS;
-static float tempext;
-static float tempin;
-static float humidity;
-static float tempDHT;
-static uint16_t vin;
+float pressureMPRLS;
+float tempext;
+float tempin;
+float humidity;
+float tempDHT;
+uint16_t vin;
 
 // All the variables for the GPS data
-static double latitude;
-static double longitude;
-static double course;
-static float alt;
-static float speed;
-static uint32_t gpsTime;
-static uint8_t satCount;
-static uint32_t age;
+double latitude;
+double longitude;
+double course;
+float alt;
+float speed;
+uint32_t gpsTime;
+uint8_t satCount;
+uint32_t age;
 
-static uint32_t time; // Time since the program started
+uint32_t time; // Time since the program started
 
-static bool buzzTime(void) { return BUZZER && (pressureMPRLS > 900 || alt < 3000); }
+inline bool buzzTime(void) { return BUZZER && (pressureMPRLS > 900 || alt < 3000); }
 
-static float getTemp(uint8_t refPin, uint8_t tempPin) {
+float getTemp(uint8_t refPin, uint8_t tempPin) {
     // Will calculate the temperature based off the voltage and return it in C
     digitalWrite(refPin, HIGH); // Turn on the LM60
     analogReference(INTERNAL); // Set the reference
@@ -72,7 +72,7 @@ static float getTemp(uint8_t refPin, uint8_t tempPin) {
     return ((4L + (1100L * vin / 1024L) - 424) / 25) + tempCalibration;
 }
 
-static void smartDelay(uint32_t ms) {
+void smartDelay(uint32_t ms) {
     // This will continue to read the gps data and then continue to even when the arduino is delaying
     uint32_t start = millis();
 
@@ -82,7 +82,7 @@ static void smartDelay(uint32_t ms) {
     } while (millis() - start < ms);
 }
 
-void setup() {
+void setup(void) {
     ss.begin(9600); // Start the gps serial
 
     pinMode(PINBUZZ, OUTPUT); // Set up the buzzer pin as an output
@@ -131,7 +131,7 @@ void setup() {
     smartDelay(500); // Give the GPS time to get some sort of lock before jumping into the loop if it had one before
 }
 
-void loop() {
+void loop(void) {
     time = millis();
     noTone(PINBUZZ);
 

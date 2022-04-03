@@ -1,9 +1,80 @@
 #include <Arduino.h>
 
+#include "buzzer.h"
+#include "double_log_component.h"
+#include "gps.h"
+#include "int_log_component.h"
+#include "log.h"
+#include "sdcard.h"
+#include "temp.h"
+
+Log my_log;
+
+int system_time = millis();
+IntLogComponent system_time_component = IntLogComponent(&system_time, "T");
+
+DoubleLogComponent temp_int_component = DoubleLogComponent(&temp_int, "ti");
+IntLogComponent temp_int_mv_component = IntLogComponent(&temp_int_mv, "timv");
+DoubleLogComponent temp_ext_component = DoubleLogComponent(&temp_ext, "te");
+IntLogComponent temp_ext_mv_component = IntLogComponent(&temp_ext_mv, "temv");
+
+IntLogComponent gps_sat_count_component = IntLogComponent(&gps_sat_count, "sc");
+IntLogComponent gps_time_component = IntLogComponent(&gps_time, "gT");
+IntLogComponent gps_age_component = IntLogComponent(&gps_age, "age");
+DoubleLogComponent gps_speed_component = DoubleLogComponent(&gps_speed, "sp");
+DoubleLogComponent gps_altitude_component = DoubleLogComponent(&gps_altitude, "alt");
+DoubleLogComponent gps_course_component = DoubleLogComponent(&gps_course, "crs");
+DoubleLogComponent gps_longitude_component = DoubleLogComponent(&gps_longitude, "long");
+DoubleLogComponent gps_latitude_component = DoubleLogComponent(&gps_latitude, "lat");
+
 void setup() {
-  // put your setup code here, to run once:
+    // setup in no particular order
+    setup_sd();
+    setup_gps();
+    setup_temp();
+    setup_buzz();
+
+    // register all variabled to the log
+    my_log.register_log_component(&system_time_component);
+
+    my_log.register_log_component(&temp_int_component);
+    my_log.register_log_component(&temp_int_mv_component);
+    my_log.register_log_component(&temp_ext_component);
+    my_log.register_log_component(&temp_ext_mv_component);
+
+    my_log.register_log_component(&gps_sat_count_component);
+    my_log.register_log_component(&gps_time_component);
+    my_log.register_log_component(&gps_age_component);
+    my_log.register_log_component(&gps_speed_component);
+    my_log.register_log_component(&gps_altitude_component);
+    my_log.register_log_component(&gps_course_component);
+    my_log.register_log_component(&gps_longitude_component);
+    my_log.register_log_component(&gps_latitude_component);
+
+    // generate headers
+#ifdef DEBUG
+    my_log.write_log(DEBUG_STREAM, true);
+#endif
+    log_to_sd(my_log, true);
+
+    sleep_read_gps(2000);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+    system_time = millis();
+    parse_gps();
+    read_temp();
+
+#ifdef DEBUG
+    my_log.write_log(DEBUG_STREAM, false);
+#endif
+    log_to_sd(my_log, false);
+
+    if (is_buzz_time(gps_altitude)) {
+        flip_buzz_state();
+    } else {
+        disable_buzzer();
+    }
+
+    sleep_read_gps(100);
 }

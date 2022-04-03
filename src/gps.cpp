@@ -3,6 +3,8 @@
 #include <AltSoftSerial.h>
 #include <TinyGPS++.h>
 
+#include "config.h"
+
 double gps_speed = 0;
 double gps_altitude = 0;
 double gps_course = 0;
@@ -32,6 +34,10 @@ void parse_gps() {
         gps_latitude = gps.location.lat();
         gps_longitude = gps.location.lng();
         gps_age = gps.location.age();
+    } else {
+#ifdef DEBUG
+    DEBUG_STREAM.println(F("invalid gps location!"));
+#endif
     }
     if (gps.altitude.isValid()) {
         gps_altitude = gps.altitude.meters();

@@ -27,7 +27,7 @@ int read_temp_helper(uint8_t enable_pin, uint8_t temp_pin) {
 
 double mv_to_c_helper(int mv) {
     // convert from internal precision to mv then apply formula in datasheet
-    return ((mv * 1100 / 1024.0) - 424) / 6.25;
+    return (((double) mv * 1100 / 1024.) - 424) / 6.25;
 }
 
 bool read_temp() {

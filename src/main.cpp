@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "buzzer.h"
+#include "config.h"
 #include "double_log_component.h"
 #include "gps.h"
 #include "int_log_component.h"
@@ -11,30 +12,37 @@
 Log my_log;
 
 int system_time = millis();
-IntLogComponent system_time_component = IntLogComponent(&system_time, "T");
+IntLogComponent system_time_component(&system_time, "T");
 
-DoubleLogComponent temp_int_component = DoubleLogComponent(&temp_int, "ti");
-IntLogComponent temp_int_mv_component = IntLogComponent(&temp_int_mv, "timv");
-DoubleLogComponent temp_ext_component = DoubleLogComponent(&temp_ext, "te");
-IntLogComponent temp_ext_mv_component = IntLogComponent(&temp_ext_mv, "temv");
+DoubleLogComponent temp_int_component(&temp_int, "ti");
+IntLogComponent temp_int_mv_component(&temp_int_mv, "timv");
+DoubleLogComponent temp_ext_component(&temp_ext, "te");
+IntLogComponent temp_ext_mv_component(&temp_ext_mv, "temv");
 
-IntLogComponent gps_sat_count_component = IntLogComponent(&gps_sat_count, "sc");
-IntLogComponent gps_time_component = IntLogComponent(&gps_time, "gT");
-IntLogComponent gps_age_component = IntLogComponent(&gps_age, "age");
-DoubleLogComponent gps_speed_component = DoubleLogComponent(&gps_speed, "sp");
-DoubleLogComponent gps_altitude_component = DoubleLogComponent(&gps_altitude, "alt");
-DoubleLogComponent gps_course_component = DoubleLogComponent(&gps_course, "crs");
-DoubleLogComponent gps_longitude_component = DoubleLogComponent(&gps_longitude, "long");
-DoubleLogComponent gps_latitude_component = DoubleLogComponent(&gps_latitude, "lat");
+IntLogComponent gps_sat_count_component(&gps_sat_count, "sc");
+IntLogComponent gps_time_component(&gps_time, "gT");
+IntLogComponent gps_age_component(&gps_age, "age");
+DoubleLogComponent gps_speed_component(&gps_speed, "sp");
+DoubleLogComponent gps_altitude_component(&gps_altitude, "alt");
+DoubleLogComponent gps_course_component(&gps_course, "crs");
+DoubleLogComponent gps_longitude_component(&gps_longitude, "long");
+DoubleLogComponent gps_latitude_component(&gps_latitude, "lat");
 
 void setup() {
+#ifdef DEBUG
+    DEBUG_STREAM.begin(9600);
+    DEBUG_STREAM.println(F("running setup"));
+#endif
     // setup in no particular order
     setup_sd();
     setup_gps();
     setup_temp();
     setup_buzz();
 
-    // register all variabled to the log
+#ifdef DEBUG
+    DEBUG_STREAM.println(F("registering variables"));
+#endif
+    // register all variables to the log
     my_log.register_log_component(&system_time_component);
 
     my_log.register_log_component(&temp_int_component);
@@ -51,6 +59,9 @@ void setup() {
     my_log.register_log_component(&gps_longitude_component);
     my_log.register_log_component(&gps_latitude_component);
 
+#ifdef DEBUG
+    DEBUG_STREAM.println(F("generating headers"));
+#endif
     // generate headers
 #ifdef DEBUG
     my_log.write_log(DEBUG_STREAM, true);
@@ -61,6 +72,9 @@ void setup() {
 }
 
 void loop() {
+#ifdef DEBUG
+    DEBUG_STREAM.println(F("===================="));
+#endif
     system_time = millis();
     parse_gps();
     read_temp();
@@ -76,5 +90,5 @@ void loop() {
         disable_buzzer();
     }
 
-    sleep_read_gps(100);
+    sleep_read_gps(2000);
 }

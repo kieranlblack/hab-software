@@ -13,7 +13,7 @@
 #define PIN_TEMP_EXT_EN 5
 #define PIN_TEMP_EXT    A2
 
-#define PIN_BUZZER 3
-#define BUZZ_ALT   3000
+#define PIN_BUZZER_MOSFET 3
+#define BUZZ_ALT          3000
 
 #endif

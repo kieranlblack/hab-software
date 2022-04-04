@@ -7,7 +7,7 @@
 bool buzzer_state = false;
 
 bool setup_buzz() {
-    pinMode(PIN_BUZZER, OUTPUT);
+    pinMode(PIN_BUZZER_MOSFET, OUTPUT);
     return true;
 }
 
@@ -21,7 +21,7 @@ bool is_buzz_time(double altitude) {
 }
 
 void disable_buzzer() {
-    noTone(PIN_BUZZER);
+    digitalWrite(PIN_BUZZER_MOSFET, LOW);
 }
 
 void flip_buzz_state() {
@@ -30,7 +30,7 @@ void flip_buzz_state() {
         DEBUG_STREAM.println(buzzer_state);
     #endif
     if (buzzer_state) {
-        tone(PIN_BUZZER, 1500);
+        digitalWrite(PIN_BUZZER_MOSFET, HIGH);
     } else {
         disable_buzzer();
     }

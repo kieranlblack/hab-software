@@ -35,15 +35,5 @@ bool read_temp() {
     temp_ext_mv = read_temp_helper(PIN_TEMP_EXT_EN, PIN_TEMP_EXT);
     temp_int = mv_to_c_helper(temp_int_mv);
     temp_ext = mv_to_c_helper(temp_ext_mv);
-#ifdef DEBUG
-    DEBUG_STREAM.print(F("temp_int_mv: "));
-    DEBUG_STREAM.println(temp_int_mv);
-    DEBUG_STREAM.print(F("temp_int: "));
-    DEBUG_STREAM.println(temp_int);
-    DEBUG_STREAM.print(F("temp_ext_mv: "));
-    DEBUG_STREAM.println(temp_ext_mv);
-    DEBUG_STREAM.print(F("temp_ext: "));
-    DEBUG_STREAM.println(temp_ext);
-#endif
     return true;
 }

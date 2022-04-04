@@ -8,9 +8,9 @@ extern double gps_altitude;
 extern double gps_course;
 extern double gps_longitude;
 extern double gps_latitude;
-extern int gps_time;
-extern int gps_age;
-extern int gps_sat_count;
+extern uint32_t gps_time;
+extern uint32_t gps_age;
+extern uint32_t gps_sat_count;
 
 bool setup_gps();
 void sleep_read_gps(uint32_t ms);

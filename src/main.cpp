@@ -8,20 +8,21 @@
 #include "log.h"
 #include "sdcard.h"
 #include "temp.h"
+#include "uint32_log_component.h"
 
 Log my_log;
 
-int system_time = millis();
-IntLogComponent system_time_component(&system_time, "T");
+uint32_t system_time = millis();
+UInt32LogComponent system_time_component(&system_time, "T");
 
 DoubleLogComponent temp_int_component(&temp_int, "ti");
 IntLogComponent temp_int_mv_component(&temp_int_mv, "timv");
 DoubleLogComponent temp_ext_component(&temp_ext, "te");
 IntLogComponent temp_ext_mv_component(&temp_ext_mv, "temv");
 
-IntLogComponent gps_sat_count_component(&gps_sat_count, "sc");
-IntLogComponent gps_time_component(&gps_time, "gT");
-IntLogComponent gps_age_component(&gps_age, "age");
+UInt32LogComponent gps_sat_count_component(&gps_sat_count, "sc");
+UInt32LogComponent gps_time_component(&gps_time, "gT");
+UInt32LogComponent gps_age_component(&gps_age, "age");
 DoubleLogComponent gps_speed_component(&gps_speed, "sp");
 DoubleLogComponent gps_altitude_component(&gps_altitude, "alt");
 DoubleLogComponent gps_course_component(&gps_course, "crs");

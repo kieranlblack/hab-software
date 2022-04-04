@@ -5,14 +5,14 @@
 Log::Log(): num_registered(0) {};
 
 bool Log::register_log_component(LogComponent *log_component) {
-#ifdef DEBUG
-    DEBUG_STREAM.print(F("registering to log: "));
-    DEBUG_STREAM.println(log_component->get_name());
-#endif
+    #ifdef DEBUG
+        DEBUG_STREAM.print(F("registering to log: "));
+        DEBUG_STREAM.println(log_component->get_name());
+    #endif
     if (num_registered >= MAX_LOG_COMPONENTS) {
-#ifdef DEBUG
-        DEBUG_STREAM.println(F("log components full"));
-#endif
+        #ifdef DEBUG
+                DEBUG_STREAM.println(F("log components full"));
+        #endif
         return false;
     }
     log_components[num_registered] = log_component;

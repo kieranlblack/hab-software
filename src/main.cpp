@@ -30,19 +30,19 @@ DoubleLogComponent gps_longitude_component(&gps_longitude, "long");
 DoubleLogComponent gps_latitude_component(&gps_latitude, "lat");
 
 void setup() {
-#ifdef DEBUG
-    DEBUG_STREAM.begin(9600);
-    DEBUG_STREAM.println(F("running setup"));
-#endif
+    #ifdef DEBUG
+        DEBUG_STREAM.begin(9600);
+        DEBUG_STREAM.println(F("running setup"));
+    #endif
     // setup in no particular order
     setup_sd();
     setup_gps();
     setup_temp();
     setup_buzz();
 
-#ifdef DEBUG
-    DEBUG_STREAM.println(F("registering variables"));
-#endif
+    #ifdef DEBUG
+        DEBUG_STREAM.println(F("registering variables"));
+    #endif
     // register all variables to the log
     my_log.register_log_component(&system_time_component);
 
@@ -60,29 +60,29 @@ void setup() {
     my_log.register_log_component(&gps_longitude_component);
     my_log.register_log_component(&gps_latitude_component);
 
-#ifdef DEBUG
-    DEBUG_STREAM.println(F("generating headers"));
-#endif
+    #ifdef DEBUG
+        DEBUG_STREAM.println(F("generating headers"));
+    #endif
     // generate headers
-#ifdef DEBUG
-    my_log.write_log(DEBUG_STREAM, true);
-#endif
+    #ifdef DEBUG
+        my_log.write_log(DEBUG_STREAM, true);
+    #endif
     log_to_sd(my_log, true);
 
     sleep_read_gps(2000);
 }
 
 void loop() {
-#ifdef DEBUG
-    DEBUG_STREAM.println(F("===================="));
-#endif
+    #ifdef DEBUG
+        DEBUG_STREAM.println(F("===================="));
+    #endif
     system_time = millis();
     parse_gps();
     read_temp();
 
-#ifdef DEBUG
-    my_log.write_log(DEBUG_STREAM, false);
-#endif
+    #ifdef DEBUG
+        my_log.write_log(DEBUG_STREAM, false);
+    #endif
     log_to_sd(my_log, false);
 
     if (is_buzz_time(gps_altitude)) {

@@ -6,6 +6,7 @@
 #include "gps.h"
 #include "int_log_component.h"
 #include "log.h"
+#include "mprls.h"
 #include "sdcard.h"
 #include "temp.h"
 #include "uint32_log_component.h"
@@ -19,6 +20,8 @@ DoubleLogComponent temp_int_component(&temp_int, "ti");
 IntLogComponent temp_int_mv_component(&temp_int_mv, "timv");
 DoubleLogComponent temp_ext_component(&temp_ext, "te");
 IntLogComponent temp_ext_mv_component(&temp_ext_mv, "temv");
+
+DoubleLogComponent pressure_component(&pressure, "pres");
 
 UInt32LogComponent gps_sat_count_component(&gps_sat_count, "sc");
 UInt32LogComponent gps_time_component(&gps_time, "gT");
@@ -37,6 +40,7 @@ void setup() {
     // setup in no particular order
     setup_sd();
     setup_gps();
+    // setup_mprls();
     setup_temp();
     setup_buzz();
 
@@ -50,6 +54,8 @@ void setup() {
     my_log.register_log_component(&temp_int_mv_component);
     my_log.register_log_component(&temp_ext_component);
     my_log.register_log_component(&temp_ext_mv_component);
+
+    my_log.register_log_component(&pressure_component);
 
     my_log.register_log_component(&gps_sat_count_component);
     my_log.register_log_component(&gps_time_component);
@@ -78,9 +84,11 @@ void loop() {
     #endif
     system_time = millis();
     parse_gps();
+    // read_mprls();
     read_temp();
 
     #ifdef DEBUG
+        my_log.write_log(DEBUG_STREAM, true);
         my_log.write_log(DEBUG_STREAM, false);
     #endif
     log_to_sd(my_log, false);

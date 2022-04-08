@@ -2,10 +2,10 @@
 
 #include "config.h"
 
-int temp_int_mv;
-double temp_int;
-int temp_ext_mv;
-double temp_ext;
+int temp_int_mv = 0;
+double temp_int = 0;
+int temp_ext_mv = 0;
+double temp_ext = 0;
 
 int read_temp_helper(uint8_t enable_pin, uint8_t temp_pin);
 

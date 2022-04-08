@@ -8,7 +8,7 @@ volatile bool enable_buzzer = false;
 bool buzzer_state = false;
 
 bool setup_buzz() {
-    pinMode(PIN_BUZZER, OUTPUT);
+    pinMode(PIN_BUZZER_MOSFET, OUTPUT);
     return true;
 }
 
@@ -26,7 +26,7 @@ void toggle_buzzer_enable() {
 }
 
 void disable_buzzer() {
-    noTone(PIN_BUZZER);
+    digitalWrite(PIN_BUZZER_MOSFET, LOW);
 }
 
 void flip_buzz_state() {
@@ -37,7 +37,7 @@ void flip_buzz_state() {
         DEBUG_STREAM.println(enable_buzzer);
     #endif
     if (buzzer_state && enable_buzzer) {
-        tone(PIN_BUZZER, 1500);
+        digitalWrite(PIN_BUZZER_MOSFET, HIGH);
     } else {
         disable_buzzer();
     }

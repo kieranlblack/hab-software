@@ -1,6 +1,6 @@
 #include "sdcard.h"
 
-#include <SDFat.h>
+#include <SdFat.h>
 
 #include "config.h"
 

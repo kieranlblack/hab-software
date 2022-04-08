@@ -79,7 +79,7 @@ bool getUBX_ACK(const uint8_t *MSG) {
         // Timeout if no valid response in 3 seconds
         if (millis() - startTime > 3000) {
             #ifdef DEBUG
-                DEBUG_STREAM.println("gps timed out");
+                DEBUG_STREAM.println(F("gps timed out"));
             #endif
             return false;
         }
@@ -119,9 +119,9 @@ bool setup_gps() {
     }
     #ifdef DEBUG
         if (gps_success) {
-            DEBUG_STREAM.println("succesfully set flight mode");
+            DEBUG_STREAM.println(F("succesfully set flight mode"));
         } else {
-            DEBUG_STREAM.println("unable to set flight mode!");
+            DEBUG_STREAM.println(F("unable to set flight mode!"));
         }
     #endif
     return gps_success;

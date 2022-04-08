@@ -4,7 +4,7 @@
 
 Adafruit_MPRLS mprls = Adafruit_MPRLS(-1, -1);
 
-double pressure;
+double pressure = 0;
 
 bool setup_mprls() {
     int attempts_remaining = 3;

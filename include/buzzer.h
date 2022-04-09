@@ -5,6 +5,7 @@ bool setup_buzz();
 bool is_buzz_time(double altitude);
 void toggle_buzzer_enable();
 void tone_off_buzzer();
+void tone_on_buzzer();
 void flip_buzz_state();
 
 #endif

@@ -29,6 +29,11 @@ void toggle_buzzer_enable() {
 }
 
 void tone_off_buzzer() {
+    // we have a pnp transistor, it turns on when there is no current at the base
+    digitalWrite(PIN_BUZZER_MOSFET, HIGH);
+}
+
+void tone_on_buzzer() {
     digitalWrite(PIN_BUZZER_MOSFET, LOW);
 }
 
@@ -40,7 +45,7 @@ void flip_buzz_state() {
         DEBUG_STREAM.println(enable_buzzer);
     #endif
     if (buzzer_state && enable_buzzer) {
-        digitalWrite(PIN_BUZZER_MOSFET, HIGH);
+        tone_on_buzzer();
     } else {
         tone_off_buzzer();
     }

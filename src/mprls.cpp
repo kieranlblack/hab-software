@@ -1,5 +1,7 @@
 #include "mprls.h"
 
+#include "config.h"
+
 #include <Adafruit_MPRLS.h>
 
 Adafruit_MPRLS mprls = Adafruit_MPRLS(-1, -1);

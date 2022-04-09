@@ -14,7 +14,7 @@ bool setup_buzz() {
 
 bool is_buzz_time(double altitude) {
     bool c_is_buzz_time = (altitude < BUZZ_ALT);
-    #ifdef DEBUG
+    #ifdef DEBUG_BUZZ_BUTT
         DEBUG_STREAM.print(F("is_buzz_time: "));
         DEBUG_STREAM.println(c_is_buzz_time);
     #endif
@@ -33,7 +33,7 @@ void tone_off_buzzer() {
 }
 
 void flip_buzz_state() {
-    #ifdef DEBUG
+    #ifdef DEBUG_BUZZ_BUTT
         DEBUG_STREAM.print(F("buzz_state: "));
         DEBUG_STREAM.println(buzzer_state);
         DEBUG_STREAM.print(F("enable_buzzer: "));

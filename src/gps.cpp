@@ -34,12 +34,12 @@ void sendUBX(const uint8_t *MSG, uint8_t len) {
     for (int i = 0; i < len; i++) {
         temp = pgm_read_byte(&MSG[i]);
         ss.write(temp);
-        #ifdef DEBUG
+        #ifdef DEBUG_GPS
             DEBUG_STREAM.print(temp, HEX);
         #endif
     }
     ss.println();
-    #ifdef DEBUG
+    #ifdef DEBUG_GPS
         DEBUG_STREAM.println(F("."));
         DEBUG_STREAM.println(F("message sent to gps"));
     #endif
@@ -78,7 +78,7 @@ bool getUBX_ACK(const uint8_t *MSG) {
 
         // Timeout if no valid response in 3 seconds
         if (millis() - startTime > 3000) {
-            #ifdef DEBUG
+            #ifdef DEBUG_GPS
                 DEBUG_STREAM.println(F("gps timed out"));
             #endif
             return false;
@@ -107,7 +107,7 @@ bool setup_gps() {
         sendUBX(set_flight_mode_msg, sizeof(set_flight_mode_msg) / sizeof(uint8_t));
         gps_success = getUBX_ACK(set_flight_mode_msg);
         if (!gps_success) {
-            #ifdef DEBUG
+            #ifdef DEBUG_GPS
                 DEBUG_STREAM.print(F("unable to set flight mode, "));
                 DEBUG_STREAM.print(attempts_remaining - 1);
                 DEBUG_STREAM.println(F(" attempts remaining"));
@@ -117,7 +117,7 @@ bool setup_gps() {
 
         attempts_remaining--;
     }
-    #ifdef DEBUG
+    #ifdef DEBUG_GPS
         if (gps_success) {
             DEBUG_STREAM.println(F("succesfully set flight mode"));
         } else {
@@ -140,7 +140,7 @@ void parse_gps() {
         gps_longitude = gps.location.lng();
         gps_age = gps.location.age();
     } else {
-    #ifdef DEBUG
+    #ifdef DEBUG_GPS
         DEBUG_STREAM.println(F("invalid gps location!"));
     #endif
     }

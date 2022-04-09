@@ -22,7 +22,7 @@ void button_isr() {
     if (is_rising_edge) {
         // the interrupt handler can register two rising edges in a row with an arbitrary time gap inbetween
         if (!is_rising_edge_last && time_delta > DEBOUNCE_MS) {
-            #ifdef DEBUG
+            #ifdef DEBUG_BUZZ_BUTT
                 DEBUG_STREAM.println(F("button interrupt recieved"));
                 DEBUG_STREAM.println(curr_time - last_time);
             #endif

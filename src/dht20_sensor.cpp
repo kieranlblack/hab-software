@@ -16,14 +16,14 @@ bool setup_dht20() {
     while (!success && attempts_remaining > 0) {
         success = DHT.begin();
         if (!success) {
-            #ifdef DEBUG
+            #ifdef DEBUG_DH20
                 DEBUG_STREAM.print(F("unable to setup dht20, "));
                 DEBUG_STREAM.print(attempts_remaining - 1);
                 DEBUG_STREAM.println(F(" attempts remaining"));
             #endif
             delay(500);
         } else {
-            #ifdef DEBUG
+            #ifdef DEBUG_DH20
                 DEBUG_STREAM.print(F("dht20 set up correctly"));
             #endif
         }

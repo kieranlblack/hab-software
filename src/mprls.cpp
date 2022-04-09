@@ -14,14 +14,14 @@ bool setup_mprls() {
     while (!success && attempts_remaining > 0) {
         success = mprls.begin();
         if (!success) {
-            #ifdef DEBUG
+            #ifdef DEBUG_MPRLS
                 DEBUG_STREAM.print(F("unable to setup mprls, "));
                 DEBUG_STREAM.print(attempts_remaining - 1);
                 DEBUG_STREAM.println(F(" attempts remaining"));
             #endif
             delay(500);
         } else {
-            #ifdef DEBUG
+            #ifdef DEBUG_MPRLS
                 DEBUG_STREAM.println(F("mprls setup correctly"));
             #endif
         }

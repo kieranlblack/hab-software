@@ -9,7 +9,7 @@ static SdFile active_file;
 
 bool setup_sd() {
     bool success = sd.begin(PIN_SD_CS, SPI_HALF_SPEED);
-    #if DEBUG
+    #if DEBUG_SD
         if (success) {
             DEBUG_STREAM.println(F("sd card working"));
         } else {
@@ -25,7 +25,7 @@ bool log_to_sd(Log &log, bool log_header) {
         log.write_log(active_file, log_header);
         active_file.close();
     }
-    #if DEBUG
+    #if DEBUG_SD
         if (!success) {
             DEBUG_STREAM.println(F("failed to write to sd"));
         }

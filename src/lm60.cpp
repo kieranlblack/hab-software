@@ -1,3 +1,5 @@
+#include "lm60.h"
+
 #include <Arduino.h>
 
 #include "config.h"
@@ -30,7 +32,7 @@ double mv_to_c_helper(int mv) {
     return (((double) mv * 1100 / 1024.) - 424) / 6.25;
 }
 
-bool read_temp() {
+bool read_lm60() {
     temp_int_mv = read_temp_helper(PIN_TEMP_INT_EN, PIN_TEMP_INT);
     temp_ext_mv = read_temp_helper(PIN_TEMP_EXT_EN, PIN_TEMP_EXT);
     temp_int = mv_to_c_helper(temp_int_mv);

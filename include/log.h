@@ -3,7 +3,7 @@
 
 #include "log_component.h"
 
-#define MAX_LOG_COMPONENTS 16
+#define MAX_LOG_COMPONENTS 17
 
 class Log {
 private:

@@ -25,4 +25,6 @@
 #define PIN_BUZZER_MOSFET 3
 #define BUZZ_ALT          3000
 
+#define PIN_VOLTMETER A3
+
 #endif

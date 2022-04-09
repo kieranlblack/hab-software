@@ -12,6 +12,7 @@
 #include "mprls.h"
 #include "sdcard.h"
 #include "uint32_log_component.h"
+#include "voltage.h"
 
 Log my_log;
 
@@ -36,6 +37,8 @@ DoubleLogComponent gps_altitude_component(&gps_altitude, "m");
 DoubleLogComponent gps_course_component(&gps_course, "cr");
 DoubleLogComponent gps_longitude_component(&gps_longitude, "lo");
 DoubleLogComponent gps_latitude_component(&gps_latitude, "la");
+
+UInt32LogComponent voltage_component(&voltage, "v");
 
 void setup() {
     #ifdef DEBUG
@@ -76,6 +79,8 @@ void setup() {
     my_log.register_log_component(&gps_longitude_component);
     my_log.register_log_component(&gps_latitude_component);
 
+    my_log.register_log_component(&voltage_component);
+
     #ifdef DEBUG
         DEBUG_STREAM.println(F("generating headers"));
     #endif
@@ -97,6 +102,7 @@ void loop() {
     read_mprls();
     read_dht20();
     read_lm60();
+    read_voltage();
 
     #ifdef DEBUG
         my_log.write_log(DEBUG_STREAM, true);

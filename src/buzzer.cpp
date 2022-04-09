@@ -9,6 +9,7 @@ bool buzzer_state = false;
 
 bool setup_buzz() {
     pinMode(PIN_BUZZER_MOSFET, OUTPUT);
+    tone_off_buzzer();
     return true;
 }
 

@@ -23,9 +23,12 @@ bool is_buzz_time(double altitude) {
 
 void toggle_buzzer_enable() {
     enable_buzzer = !enable_buzzer;
+    if (!enable_buzzer) {
+        tone_off_buzzer();
+    }
 }
 
-void disable_buzzer() {
+void tone_off_buzzer() {
     digitalWrite(PIN_BUZZER_MOSFET, LOW);
 }
 
@@ -39,7 +42,7 @@ void flip_buzz_state() {
     if (buzzer_state && enable_buzzer) {
         digitalWrite(PIN_BUZZER_MOSFET, HIGH);
     } else {
-        disable_buzzer();
+        tone_off_buzzer();
     }
     buzzer_state = !buzzer_state;
 }

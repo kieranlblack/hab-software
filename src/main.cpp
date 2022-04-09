@@ -33,10 +33,6 @@ DoubleLogComponent gps_course_component(&gps_course, "crs");
 DoubleLogComponent gps_longitude_component(&gps_longitude, "long");
 DoubleLogComponent gps_latitude_component(&gps_latitude, "lat");
 
-void button_ISR() {
-    toggle_buzzer();
-}
-
 void setup() {
     #ifdef DEBUG
         DEBUG_STREAM.begin(9600);
@@ -48,8 +44,7 @@ void setup() {
     // setup_mprls();
     setup_temp();
     setup_buzz();
-    pinMode(PIN_BUTTON, INPUT);
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON), button_ISR, CHANGE);
+    setup_button();
 
     #ifdef DEBUG
         DEBUG_STREAM.println(F("registering variables"));
@@ -88,7 +83,6 @@ void setup() {
 void loop() {
     #ifdef DEBUG
         DEBUG_STREAM.println(F("===================="));
-        DEBUG_STREAM.println(digitalRead(PIN_BUTTON));
     #endif
     system_time = millis();
     parse_gps();
@@ -104,7 +98,7 @@ void loop() {
     if (is_buzz_time(gps_altitude)) {
         flip_buzz_state();
     } else {
-        disable_buzzer();
+        tone_off_buzzer();
     }
 
     sleep_read_gps(2000);

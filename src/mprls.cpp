@@ -29,6 +29,6 @@ bool setup_mprls() {
 }
 
 bool read_mprls() {
-    pressure = mprls.readPressure();
+    pressure = (double) mprls.readPressure();
     return true;
 }

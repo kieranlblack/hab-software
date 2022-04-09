@@ -22,14 +22,15 @@ int read_temp_helper(uint8_t enable_pin, uint8_t temp_pin) {
     analogReference(INTERNAL);
     analogRead(temp_pin);
     delay(10);
-    int vin = analogRead(temp_pin);
+    int adc = analogRead(temp_pin);
     digitalWrite(enable_pin, LOW);
-    return vin;
+    // convert from internal precision to mv
+    return 1100. * adc / 1024.;
 }
 
 double mv_to_c_helper(int mv) {
-    // convert from internal precision to mv then apply formula in datasheet
-    return (((double) mv * 1100 / 1024.) - 424) / 6.25;
+    // apply formula in datasheet
+    return ((double) mv - 424) / 6.25;
 }
 
 bool read_lm60() {

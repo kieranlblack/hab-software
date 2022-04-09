@@ -1,15 +1,16 @@
 #include <Arduino.h>
 
-#include "buzzer.h"
 #include "button.h"
+#include "buzzer.h"
 #include "config.h"
+#include "dht20_sensor.h"
 #include "double_log_component.h"
 #include "gps.h"
 #include "int_log_component.h"
+#include "lm60.h"
 #include "log.h"
 #include "mprls.h"
 #include "sdcard.h"
-#include "temp.h"
 #include "uint32_log_component.h"
 
 Log my_log;
@@ -23,6 +24,9 @@ DoubleLogComponent temp_ext_component(&temp_ext, "te");
 IntLogComponent temp_ext_mv_component(&temp_ext_mv, "temv");
 
 DoubleLogComponent pressure_component(&pressure, "pres");
+
+DoubleLogComponent temp_dht_component(&temp_dht, "tdht");
+DoubleLogComponent humidity_component(&humidity, "hum");
 
 UInt32LogComponent gps_sat_count_component(&gps_sat_count, "sc");
 UInt32LogComponent gps_time_component(&gps_time, "gT");
@@ -41,7 +45,8 @@ void setup() {
     // setup in no particular order
     setup_sd();
     setup_gps();
-    // setup_mprls();
+    setup_mprls();
+    setup_dht20();
     setup_temp();
     setup_buzz();
     setup_button();
@@ -58,6 +63,9 @@ void setup() {
     my_log.register_log_component(&temp_ext_mv_component);
 
     my_log.register_log_component(&pressure_component);
+
+    my_log.register_log_component(&temp_dht_component);
+    my_log.register_log_component(&humidity_component);
 
     my_log.register_log_component(&gps_sat_count_component);
     my_log.register_log_component(&gps_time_component);
@@ -86,8 +94,9 @@ void loop() {
     #endif
     system_time = millis();
     parse_gps();
-    // read_mprls();
-    read_temp();
+    read_mprls();
+    read_dht20();
+    read_lm60();
 
     #ifdef DEBUG
         my_log.write_log(DEBUG_STREAM, true);

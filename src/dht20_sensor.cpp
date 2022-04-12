@@ -53,6 +53,7 @@ bool setup_dht20() {
 }
 
 bool read_dht20() {
+    DHT.read();
     humidity = (double) DHT.getHumidity();
     temp_dht = (double) DHT.getTemperature();
     return true;

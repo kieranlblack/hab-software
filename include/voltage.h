@@ -2,7 +2,7 @@
 #define VOLTAGE_H
 
 #define VOLTMETER_R1 10000
-#define VOLTMETER_R2 3300
+#define VOLTMETER_R2 2200
 
 #include <Arduino.h>
 

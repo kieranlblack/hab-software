@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define DEBUG               true // COMMENT OUT THIS LINE TO DISABLE
+// #define DEBUG               true // COMMENT OUT THIS LINE TO DISABLE
 #ifdef DEBUG
     // #define DEBUG_DH20      true
     // #define DEBUG_GPS       true

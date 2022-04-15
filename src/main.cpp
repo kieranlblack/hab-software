@@ -9,7 +9,6 @@
 #include "int_log_component.h"
 #include "lm60.h"
 #include "log.h"
-#include "mprls.h"
 #include "sdcard.h"
 #include "uint32_log_component.h"
 #include "voltage.h"
@@ -23,8 +22,6 @@ DoubleLogComponent temp_int_component(&temp_int, "ti");
 IntLogComponent temp_int_mv_component(&temp_int_mv, "iv");
 DoubleLogComponent temp_ext_component(&temp_ext, "te");
 IntLogComponent temp_ext_mv_component(&temp_ext_mv, "ev");
-
-DoubleLogComponent pressure_component(&pressure, "p");
 
 DoubleLogComponent temp_dht_component(&temp_dht, "td");
 DoubleLogComponent humidity_component(&humidity, "h");
@@ -48,7 +45,6 @@ void setup() {
     // setup in no particular order
     setup_sd();
     setup_gps();
-    setup_mprls();
     setup_dht20();
     setup_temp();
     setup_buzz();
@@ -64,8 +60,6 @@ void setup() {
     my_log.register_log_component(&temp_int_mv_component);
     my_log.register_log_component(&temp_ext_component);
     my_log.register_log_component(&temp_ext_mv_component);
-
-    my_log.register_log_component(&pressure_component);
 
     my_log.register_log_component(&temp_dht_component);
     my_log.register_log_component(&humidity_component);
@@ -99,7 +93,6 @@ void loop() {
     #endif
     system_time = millis();
     parse_gps();
-    read_mprls();
     read_dht20();
     read_lm60();
     read_voltage();

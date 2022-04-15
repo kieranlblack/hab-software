@@ -16,26 +16,25 @@
 Log my_log;
 
 uint32_t system_time = millis();
-UInt32LogComponent system_time_component(&system_time, "T");
+UInt32LogComponent system_time_component(&system_time, "sys_time");
 
-DoubleLogComponent temp_int_component(&temp_int, "ti");
-IntLogComponent temp_int_mv_component(&temp_int_mv, "iv");
-DoubleLogComponent temp_ext_component(&temp_ext, "te");
-IntLogComponent temp_ext_mv_component(&temp_ext_mv, "ev");
+DoubleLogComponent temp_dht_component(&temp_dht, "temp_dht");
+DoubleLogComponent humidity_component(&humidity, "hum");
 
-DoubleLogComponent temp_dht_component(&temp_dht, "td");
-DoubleLogComponent humidity_component(&humidity, "h");
+UInt32LogComponent voltage_component(&voltage, "mv");
+DoubleLogComponent temp_int_component(&temp_int, "temp_int");
+IntLogComponent temp_int_mv_component(&temp_int_mv, "temp_int_mv");
+DoubleLogComponent temp_ext_component(&temp_ext, "temp_ext");
+IntLogComponent temp_ext_mv_component(&temp_ext_mv, "temp_ext_mv");
 
-UInt32LogComponent gps_sat_count_component(&gps_sat_count, "C");
-UInt32LogComponent gps_time_component(&gps_time, "gT");
-UInt32LogComponent gps_age_component(&gps_age, "ag");
-DoubleLogComponent gps_speed_component(&gps_speed, "s");
-DoubleLogComponent gps_altitude_component(&gps_altitude, "m");
-DoubleLogComponent gps_course_component(&gps_course, "cr");
-DoubleLogComponent gps_longitude_component(&gps_longitude, "lo");
-DoubleLogComponent gps_latitude_component(&gps_latitude, "la");
-
-UInt32LogComponent voltage_component(&voltage, "v");
+UInt32LogComponent gps_sat_count_component(&gps_sat_count, "sat_count");
+UInt32LogComponent gps_time_component(&gps_time, "gps_time");
+UInt32LogComponent gps_age_component(&gps_age, "age");
+DoubleLogComponent gps_speed_component(&gps_speed, "speed");
+DoubleLogComponent gps_altitude_component(&gps_altitude, "altitude");
+DoubleLogComponent gps_course_component(&gps_course, "course");
+DoubleLogComponent gps_longitude_component(&gps_longitude, "longitude");
+DoubleLogComponent gps_latitude_component(&gps_latitude, "latitude");
 
 void setup() {
     #ifdef DEBUG
